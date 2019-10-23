@@ -1,0 +1,13 @@
+* {
+    box-sizing: border-box;
+    font-family: 'Avenir', Helvetica, Arial, sans-serif;
+}
+
+body {
+    max-height: 100vh;
+}
+
+img {
+    max-height: 100%;
+    max-width: 100%;
+}
