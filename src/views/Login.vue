@@ -38,6 +38,7 @@
         required,
         email
     } from 'vuelidate/lib/validators'
+    import AuthService from '../services/auth.service'
 
     export default {
         name: 'Login',
@@ -64,18 +65,19 @@
         }
         ,
         methods: {
-            login() {
-                this.$http.post('auth/login', this.form)
-                    .then((res) => {
-                        localStorage.setItem('accessToken', res.body.accessToken);
+            async login() {
+                await AuthService.login(this.form.email, this.form.password)
+                    .then(res => {
+                        localStorage.setItem('accessToken', res.data.accessToken);
                         localStorage.setItem('email', this.form.email);
                         this.$router.push({path: '/users'});
-                    }, err => {
-                        // eslint-disable-next-line no-console
-                        console.log(err);
+                    })
+                    .catch(error => {
+                        this.$toasted.show(error.message, {
+                            type: 'error'
+                        });
                     });
-            }
-            ,
+            },
             validateUser() {
                 if (!this.$v.$invalid) {
                     this.login();

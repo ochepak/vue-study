@@ -33,7 +33,8 @@
     import {
         required,
         maxLength
-    } from 'vuelidate/lib/validators'
+    } from 'vuelidate/lib/validators';
+    import {UPDATE_USER} from '@/store/types';
 
     export default {
         name: 'Edit',
@@ -65,25 +66,27 @@
             this.form.bio = this.user.bio || null;
         },
         methods: {
-            updateUser() {
-                this.$http.patch('api/users/id/' + this.user._id, this.form)
-                    .then(() => {
-                        this.closeWindow(true);
-                        this.$toasted.show('User was updated', {
-                            type: 'success'
-                        });
-                    }, err => {
-                        // eslint-disable-next-line no-console
-                        console.log(err);
+            async updateUser() {
+                try {
+                    await this.$store.dispatch(UPDATE_USER, {
+                        id: this.user._id,
+                        name: this.form.name,
+                        bio: this.form.bio
                     });
+                    this.closeWindow(true);
+                } catch (e) {
+                    this.$toasted.show(e.message, {
+                        type: 'error'
+                    });
+                }
             },
             validateUser() {
                 if (!this.$v.$invalid) {
                     this.updateUser();
                 }
             },
-            closeWindow(updated = false) {
-                this.$emit('closeDialog', updated);
+            closeWindow() {
+                this.$emit('close-dialog');
             }
         }
     }

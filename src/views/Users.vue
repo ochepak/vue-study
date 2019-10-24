@@ -1,7 +1,7 @@
 <template>
     <div>
         <md-dialog :md-active.sync="showEditDialog">
-            <Edit :user="activeUser" @closeDialog="onUserUpdate($event)"></Edit>
+            <Edit :user="activeUser" @close-dialog="onUserUpdate()"></Edit>
         </md-dialog>
 
         <md-table md-card>
@@ -33,7 +33,7 @@
 
                         <md-menu-content>
                             <md-menu-item @click="showDialog(user)">Edit</md-menu-item>
-                            <md-menu-item @click="deleteUser(user._id, i, user.email)">Delete</md-menu-item>
+                            <md-menu-item @click="deleteUser(user._id, user.email)">Delete</md-menu-item>
                         </md-menu-content>
                     </md-menu>
                 </md-table-cell>
@@ -44,62 +44,66 @@
 
 <script>
     import Edit from "@/components/Edit";
+    import AuthService from '../services/auth.service'
+    import {DELETE_USER, GET_ALL_USERS} from "@/store/types";
 
     export default {
         name: "Users",
         components: {Edit},
         data: () => {
             return {
-                users: [],
                 showEditDialog: false,
                 activeUser: null
             }
         },
         beforeCreate: function () {
-            this.$http.get('api/users')
-                .then(res => {
-                    this.users = res.body;
-                });
+            this.$store.dispatch(GET_ALL_USERS)
+        },
+        computed: {
+            users() {
+                return this.$store.getters.getAllUsers
+            }
         },
         methods: {
-            logout() {
-                this.$http.get('api/users/logout')
+            async logout() {
+                await AuthService.logout()
                     .then(() => {
                         localStorage.removeItem('accessToken');
                         localStorage.removeItem('email');
                         this.$router.push({path: '/login'});
+                    })
+                    .catch(error => {
+                        this.$toasted.show(error.message, {
+                            type: 'error'
+                        });
                     });
             },
             showDialog(user) {
                 this.activeUser = user;
                 this.showEditDialog = true;
             },
-            deleteUser(_id, index, email) {
+            async deleteUser(_id, email) {
                 if (email === localStorage.getItem('email')) {
                     this.$toasted.show('You cannot delete your account', {
                         type: 'error'
                     });
                     return;
                 }
-                this.$http.delete('api/users/id', {
-                    body: {
+                try {
+                    await this.$store.dispatch(DELETE_USER, {
                         id: _id
-                    }
-                }).then(() => {
-                    this.users.splice(index, 1);
+                    });
                     this.$toasted.show('User was removed', {
                         type: 'success'
                     });
-                });
-            },
-            onUserUpdate(updated) {
-                this.showEditDialog = false;
-                if (updated) {
-                    this.$http.get('api/users')
-                        .then(res => {
-                            this.users = res.body;
-                        });
+                } catch (e) {
+                    this.$toasted.show(e.message, {
+                        type: 'error'
+                    });
                 }
+            },
+            onUserUpdate() {
+                this.showEditDialog = false;
             }
         }
     }

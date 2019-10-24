@@ -1,8 +1,11 @@
-import Login from "@/components/Login";
+import Vue from 'vue';
+import Login from "@/views/Login";
 import App from "@/App";
-import Registration from "@/components/Registration";
-import Users from "@/components/Users";
+import Registration from "@/views/Registration";
+import Users from "@/views/Users";
 import VueRouter from "vue-router";
+
+Vue.use(VueRouter);
 
 const routes = [
     {path: '', component: App},
@@ -13,5 +16,6 @@ const routes = [
 ];
 
 export const router = new VueRouter({
-    routes
+    routes,
+    mode: 'history'
 });
